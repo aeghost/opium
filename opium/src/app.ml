@@ -27,10 +27,10 @@ let make_connection_handler ~host ~port ?middlewares handler error_handler =
   let connection_handler addr fd =
     Httpaf_lwt_unix.Server.create_connection_handler
       ~request_handler:(fun addr ->
-        Rock.Server_connection.to_httpaf_request_handler (sockaddr_to_string addr) app)
+          Rock.Server_connection.to_httpaf_request_handler (sockaddr_to_string addr) app)
       ~error_handler:(fun addr ->
-        (Rock.Server_connection.to_httpaf_error_handler error_handler)
-          (sockaddr_to_string addr))
+          (Rock.Server_connection.to_httpaf_error_handler error_handler)
+            (sockaddr_to_string addr))
       addr
       fd
   in
@@ -103,23 +103,11 @@ let default_not_found _ =
        ())
 ;;
 
-let system_cores =
-  match Sys.unix with
-  | false ->
-    (* TODO: detect number of cores on Windows *)
-    1
-  | true ->
-    let ic = Unix.open_process_in "getconf _NPROCESSORS_ONLN" in
-    let cores = int_of_string (input_line ic) in
-    ignore (Unix.close_process_in ic);
-    cores
-;;
-
 let empty =
   { name = "Opium Default Name"
   ; host = "0.0.0.0"
   ; port = 3000
-  ; jobs = system_cores
+  ; jobs = 1
   ; backlog = None
   ; debug = false
   ; verbose = false
@@ -135,7 +123,7 @@ let create_router routes =
     routes
     ~init:Middleware_router.empty
     ~f:(fun router (meth, route, action) ->
-      Middleware_router.add router ~meth ~route ~action)
+        Middleware_router.add router ~meth ~route ~action)
 ;;
 
 let attach_middleware { verbose; debug; routes; middlewares; _ } =
@@ -189,10 +177,10 @@ let any methods route action t =
   if List.length methods = 0
   then
     Logs.warn (fun f ->
-      f
-        "Warning: you're using [any] attempting to bind to '%s' but your list of http \
-         methods is empty route"
-        route);
+        f
+          "Warning: you're using [any] attempting to bind to '%s' but your list of http \
+           methods is empty route"
+          route);
   let route = Route.of_string route in
   methods
   |> List.fold_left ~init:t ~f:(fun app meth -> app |> register ~meth ~route ~action)
@@ -214,11 +202,11 @@ let start app =
   let middlewares = attach_middleware app in
   setup_logger app;
   Logs.info (fun f ->
-    f
-      "Starting Opium on %s:%d%s"
-      app.host
-      app.port
-      (if app.debug then " (debug mode)" else ""));
+      f
+        "Starting Opium on %s:%d%s"
+        app.host
+        app.port
+        (if app.debug then " (debug mode)" else ""));
   run_unix
     ?backlog:app.backlog
     ~middlewares
@@ -234,12 +222,12 @@ let start_multicore app =
   let middlewares = attach_middleware app in
   setup_logger app;
   Logs.info (fun f ->
-    f
-      "Starting Opium on %s:%d with %d cores%s"
-      app.host
-      app.port
-      app.jobs
-      (if app.debug then " (debug mode)" else ""));
+      f
+        "Starting Opium on %s:%d with %d cores%s"
+        app.host
+        app.port
+        app.jobs
+        (if app.debug then " (debug mode)" else ""));
   run_unix_multicore
     ~middlewares
     ~host:app.host
@@ -364,8 +352,8 @@ let run_command' app =
   match Cmd.eval_value cmd with
   | Ok (`Ok a) ->
     Lwt.async (fun () ->
-      let* _server = start a in
-      Lwt.return_unit);
+        let* _server = start a in
+        Lwt.return_unit);
     let forever, _ = Lwt.wait () in
     `Ok forever
   | Error _ -> `Error
@@ -376,8 +364,8 @@ let run_command app =
   match app |> run_command' with
   | `Ok a ->
     Lwt.async (fun () ->
-      let* _server = a in
-      Lwt.return_unit);
+        let* _server = a in
+        Lwt.return_unit);
     let forever, _ = Lwt.wait () in
     Lwt_main.run forever
   | `Error -> exit 1
